@@ -15,6 +15,19 @@ function finditembyid (id) {
 	return false; 
 }
 
+// search through food list to find the food object
+function findminebyid (id) {
+	
+	for (var i = 0; i < mine_pickup.length; i++) {
+
+		if (mine_pickup[i].id == id) {
+			return mine_pickup[i]; 
+		}
+	}
+	
+	return false; 
+}
+
 // function called when new food is added in the server.
 function onitemUpdate (data) {
 	food_pickup.push(new food_object(data.id, data.type, data.x, data.y)); 
@@ -31,6 +44,18 @@ function onitemremove (data) {
 	var removeItem; 
 	removeItem = finditembyid(data.id);
 	food_pickup.splice(food_pickup.indexOf(removeItem), 1); 
+	
+	//destroy the phaser object 
+	removeItem.item.destroy(true,false);
+	
+}
+
+// function called when mine needs to be removed in the client. 
+function onmineremove (data) {
+	
+	var removeItem; 
+	removeItem = findminebyid(data.id);
+	mine_pickup.splice(mine_pickup.indexOf(removeItem), 1); 
 	
 	//destroy the phaser object 
 	removeItem.item.destroy(true,false);

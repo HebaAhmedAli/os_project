@@ -33,8 +33,8 @@ function keyDown(event) {
  console.log(event.keyCode);       //space keycode=32 
 var pointer = game.input.mousePointer;
  socket.emit('please_add_mine',{
-				pointer_x: pointer.x, 
-				pointer_y: pointer.y, 
+				pointer_x: pointer.worldX, 
+				pointer_y: pointer.worldY, 
 				
 			});
 }
@@ -66,21 +66,16 @@ function createPlayer () {
 	player.body_size = player.radius; 
 	//set the initial size;
 	player.initial_size = player.radius;
-	player.type = "player_body"; 
-    
 
 	// draw a shape
 	game.physics.p2.enableBody(player, true);
-	player.body.setCircle(100);         ////de lw 3aiza algsm yakol
-	//player.body.clearShapes();      //de lw 3aiza algsm myakolsh
-	player.body.addCircle(50, 150 , 0,50); 
+	player.body.clearShapes();
+	player.body.addCircle(player.body_size, 0 , 0); 
 	player.body.data.shapes[0].sensor = true;
-   
 	//enable collision and when it makes a contact with another body, call player_coll
 	player.body.onBeginContact.add(player_coll, this); 
-	//player.body.rotation=false;
 	
-	//camera follow
+	//We need this line to make camera follow player
 	game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.5, 0.5);
 }
 
@@ -93,7 +88,8 @@ var remote_player = function (id, startx, starty, start_angle) {
 	this.angle = start_angle;
 	
 	this.player = game.add.graphics(this.x , this.y);
-	this.player.radius = 100;
+	//intialize the size with the server value
+	this.player.radius = startSize
 
 	// set a fill and line style
 	this.player.beginFill(0xffd900);
@@ -101,16 +97,17 @@ var remote_player = function (id, startx, starty, start_angle) {
 	this.player.drawCircle(0, 0, this.player.radius * 2);
 	this.player.endFill();
 	this.player.anchor.setTo(0.5,0.5);
+	//we set the initial size;
+	this.initial_size = startSize;
+	//we set the body size to the current player radius
 	this.player.body_size = this.player.radius; 
-   this.player.type = "player_body";
+	this.player.type = "player_body";
 	this.player.id = this.id;
+
 	// draw a shape
 	game.physics.p2.enableBody(this.player, true);
-
-	//	this.player.body.rotation=false;
-	this.player.body.setCircle(100);
-	//this.player.body.clearShapes();   
-	this.player.body.addCircle(50, 150 , 0,50); 
+	this.player.body.clearShapes();
+	this.player.body.addCircle(this.player.body_size, 0 , 0); 
 	this.player.body.data.shapes[0].sensor = true;
 
 }
@@ -126,7 +123,6 @@ function onNewPlayer (data) {
 //Server tells us there is a new enemy movement. We find the moved enemy
 //and sync the enemy movement with the server
 function onEnemyMove (data) {
-	console.log("moving enemy");
 	
 	var movePlayer = findplayerbyid (data.id); 
 	
@@ -145,8 +141,6 @@ function onEnemyMove (data) {
 	speed = distance/0.05;
 	
 	movePlayer.rotation = movetoPointer(movePlayer.player, speed, newPointer);
-	//	movePlayer.rotation=false;
-	//movePlayer.body.rotation=false;
 }
 
 //we're receiving the calculated position from the server and changing the player position
@@ -174,21 +168,19 @@ function onInputRecieved (data) {
 
 
 function onGained (data) {
-	player.body_size = data.new_size;
-	var new_scale = data.new_size/player.initial_size;
-	player.scale.set(new_scale);
-	//create new body
-	//player.body.clearShapes();
-	player.body.setCircle(data.new_size);
-	player.body.addCircle(data.new_size/2,data.new_size+data.new_size/2 , 0,50); 
-	player.body.data.shapes[0].sensor = true;
-		player.body.rotation=false;
+
+ console.log("id: "+data.id+" score: "+data.new_score)
 }
 
 function onKilled (data) {
+	console.log("player killed");
 	player.destroy();
 }
 
+function onlose_power(data)
+{
+	console.log("id: "+data.id+" power: "+data.new_power)
+}
 
 //This is where we use the socket id. 
 //Search through enemies list to find the right enemy of the id.
@@ -229,16 +221,21 @@ main.prototype = {
 		//when the player receives the new input
 		socket.on('input_recieved', onInputRecieved);
 
-//when the player gets killed
+         //when the player gets killed
 		socket.on('killed', onKilled);
-		//when the player gains in size
+		//when the player gains in score
 		socket.on('gained', onGained);
+
+		socket.on('lose_power',onlose_power);
 		
 		// check for item removal
 		socket.on ('itemremove', onitemremove); 
+		socket.on ('mineremove', onmineremove); 
 		// check for item update
 		socket.on('item_update', onitemUpdate); 
+		//mine update
 		socket.on('mine_update', onmineUpdate); 
+
 		document.addEventListener('keydown', keyDown);
 	},
 	
