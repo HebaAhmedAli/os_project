@@ -89,7 +89,7 @@ var remote_player = function (id, startx, starty, start_angle) {
 	
 	this.player = game.add.graphics(this.x , this.y);
 	//intialize the size with the server value
-	this.player.radius = startSize
+	this.player.radius =100;
 
 	// set a fill and line style
 	this.player.beginFill(0xffd900);
@@ -98,7 +98,7 @@ var remote_player = function (id, startx, starty, start_angle) {
 	this.player.endFill();
 	this.player.anchor.setTo(0.5,0.5);
 	//we set the initial size;
-	this.initial_size = startSize;
+	this.initial_size = 100;
 	//we set the body size to the current player radius
 	this.player.body_size = this.player.radius; 
 	this.player.type = "player_body";
