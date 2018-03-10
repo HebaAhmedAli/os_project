@@ -59,6 +59,8 @@ var Player = function (startX, startY, startAngle) {
  
   //this.size = getRndInteger(40, 100);
   this.size=100;
+  this.score=50;
+  this.power=100;
 }
 
 
@@ -73,8 +75,8 @@ var foodpickup = function (max_x, max_y, type, id) {
 }
 
 var minepickup = function (x, y, type, id) {
-	this.x = x+10 ;
-	this.y = y+10;
+	this.x = x-200 ;
+	this.y = y-200;
 	this.type = type; 
 	this.id = id; 
 	this.powerup; 
@@ -126,7 +128,25 @@ function addfood(n) {
 
 function add_mine(data)
 {
-	     var unique_id = unique.v4(); 
+	     var movePlayer = find_playerid(this.id); 
+	
+
+	     if(movePlayer.score-10>=0)
+	     movePlayer.score-=10;
+	     else
+	     {
+          console.log("can't add mine because of your score");
+          return;
+	     }
+
+
+	     //------update the board here
+	     ////broadcast the new score for check only
+	
+	      this.emit("gained", {new_score: movePlayer.score,id:movePlayer.id}); 
+
+	     
+	    var unique_id = unique.v4(); 
 		var mineentity = new minepickup(data.pointer_x,data.pointer_y, 'mine', unique_id);
 		game_instance.mine_pickup.push(mineentity); 
 		//set the food data back to client
@@ -164,7 +184,8 @@ function onNewplayer (data) {
 		x: newPlayer.x,
 		y: newPlayer.y,
 		angle: newPlayer.angle,
-		size: newPlayer.size
+		size: newPlayer.size,
+		
 	}; 
 	
 	//send to the new player about everyone who is already connected. 	
@@ -176,6 +197,7 @@ function onNewplayer (data) {
 			y: existingPlayer.y, 
 			angle: existingPlayer.angle,	
 			size: existingPlayer.size
+
 		};
 		console.log("pushing player");
 		//send message to the sender-client only
@@ -187,6 +209,12 @@ function onNewplayer (data) {
 		var food_pick = game_instance.food_pickup[j];
 		this.emit('item_update', food_pick); 
 	}
+
+	//Tell the client to make mines that are exisiting
+	for (j = 0; j < game_instance.mine_pickup.length; j++) {
+		var mine_pick = game_instance.mine_pickup[j];
+		this.emit('mine_update', mine_pick); 
+	}
 	
 	//send message to every connected client except the sender
 	this.broadcast.emit('new_enemyPlayer', current_info);
@@ -196,23 +224,7 @@ function onNewplayer (data) {
 }
 
 
-//we're not using this anymore
-function onMovePlayer (data) {
-	var movePlayer = find_playerid(this.id); 
-	movePlayer.x = data.x;
-	movePlayer.y = data.y;
-	movePlayer.angle = data.angle; 
-	
-	var moveplayerData = {
-		id: movePlayer.id,
-		x: movePlayer.x,
-		y: movePlayer.y, 
-		angle: movePlayer.angle
-	}
-	
-	//send message to every connected client except the sender
-	this.broadcast.emit('enemy_move', moveplayerData);
-}
+
 
 //instead of listening to player positions, we listen to user inputs 
 function onInputFired (data) {
@@ -313,6 +325,17 @@ function find_food (id) {
 	return false;
 }
 
+function find_mine (id) {
+	for (var i = 0; i < game_instance.mine_pickup.length; i++) {
+		if (game_instance.mine_pickup[i].id == id) {
+			return game_instance.mine_pickup[i]; 
+		}
+	}
+	
+	return false;
+}
+
+
 function onitemPicked (data) {
 	var movePlayer = find_playerid(this.id); 
 
@@ -323,18 +346,53 @@ function onitemPicked (data) {
 		return;
 	}
 	
-	//increase player size
-	movePlayer.size += 3; 
-	//broadcast the new size
-	this.emit("gained", {new_size: movePlayer.size}); 
+	//increase player score
+	movePlayer.score += 1; 
+	//broadcast the new score for check only
+	
+	 this.emit("gained", {new_score: movePlayer.score,id:movePlayer.id}); 
+
+	 //update the board here
 	
 	game_instance.food_pickup.splice(game_instance.food_pickup.indexOf(object), 1);
 	
 
 	io.emit('itemremove', object); 
+	
+}
+function onminePicked (data) {
+	var movePlayer = find_playerid(this.id); 
+
+	var object = find_mine(data.id);	
+	if (!object) {
+		console.log(data);
+		console.log("could not find object");
+		return;
+	}
+	
+	//decrease player power
+	movePlayer.power -= 10; 
+	//broadcast the new power for check only 3alban
+	this.emit("lose_power", {new_power: movePlayer.power,id:movePlayer.id}); 
+
+	if(movePlayer.power<=0)
+	{
+
+		this.emit("killed");
+		
+		this.broadcast.emit('remove_player', {id: this.id});
+
+		player_lst.splice(player_lst.indexOf(movePlayer), 1);
+	
+
+	}
+	
+	game_instance.mine_pickup.splice(game_instance.mine_pickup.indexOf(object), 1);
+	
+
+	io.emit('mineremove', object); 
 	//this.emit('item_picked');       //-------------------?
 }
-
 
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1) ) + min;
@@ -351,15 +409,13 @@ io.sockets.on('connection', function(socket){
 	
 	// listen for new player
 	socket.on("new_player", onNewplayer);
-	/*
-	//we dont need this anymore
-	socket.on("move_player", onMovePlayer);
-	*/
+	
 	//listen for new player inputs. 
 	socket.on("input_fired", onInputFired);
 
 	//listen if player got items 
 	socket.on('item_picked', onitemPicked);
+	socket.on('mine_picked', onminePicked);
 
 	socket.on('please_add_mine',add_mine);
 });
