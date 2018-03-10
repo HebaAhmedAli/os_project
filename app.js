@@ -75,8 +75,8 @@ var foodpickup = function (max_x, max_y, type, id) {
 }
 
 var minepickup = function (x, y, type, id) {
-	this.x = x-200 ;
-	this.y = y-200;
+	this.x = x-150 ;
+	this.y = y-150;
 	this.type = type; 
 	this.id = id; 
 	this.powerup; 
