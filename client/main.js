@@ -30,13 +30,17 @@ function onsocketConnected () {
 
 function keyDown(event) {
   console.log(event);
- console.log(event.keyCode);       //space keycode=32 
-var pointer = game.input.mousePointer;
- socket.emit('please_add_mine',{
+ console.log(event.keyCode);  
+  if(event.keyCode==32 )
+  {
+  	var pointer = game.input.mousePointer;
+    socket.emit('please_add_mine',{
 				pointer_x: pointer.worldX, 
 				pointer_y: pointer.worldY, 
 				
 			});
+  }
+
 }
 
 // When the server notifies us of client disconnection, we find the disconnected
