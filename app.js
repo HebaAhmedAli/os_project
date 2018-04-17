@@ -14,8 +14,7 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
-
-
+//app.use('/asset',express.static(__dirname + '/asset'));
 
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
@@ -143,7 +142,9 @@ function add_mine(data)
 	     }
 
 
-	     //------update the board here
+		 //------update the board here
+		 sortPlayerListByScore();
+
 	     ////broadcast the new score for check only
 	
 	      this.emit("gained", {new_score: movePlayer.score,id:movePlayer.id}); 
@@ -207,6 +208,12 @@ function onNewplayer (data) {
 		this.emit("new_enemyPlayer", player_info);
 	}
 	
+	//b emit da hna bs 34an el power yzhar fe bdayet el le3b 34an da elly bycall update_power_leaderB
+
+	this.emit("lose_power", {new_power: newPlayer.power,id:newPlayer.id}); 
+	
+
+
 	//Tell the client to make foods that are exisiting
 	for (j = 0; j < game_instance.food_pickup.length; j++) {
 		var food_pick = game_instance.food_pickup[j];
@@ -224,6 +231,10 @@ function onNewplayer (data) {
 	
 
 	player_lst.push(newPlayer); 
+
+	sortPlayerListByScore();
+
+	
 }
 
 
@@ -298,10 +309,10 @@ function onClientdisconnect() {
 	}
 	
 	console.log("removing player " + this.id);
-	
 	//send message to every connected client except the sender
 	this.broadcast.emit('remove_player', {id: this.id});
-	
+
+	sortPlayerListByScore();
 }
 
 // find player by the the unique socket id 
@@ -338,6 +349,27 @@ function find_mine (id) {
 	return false;
 }
 
+// called 
+//1.When the player picks up coins
+//2.When the new player connects
+//3.When the player disconnects (exits without dying).
+//4.When the player dies (his power becomes zero)
+
+function sortPlayerListByScore() {
+	player_lst.sort(function(a,b) {
+		return b.score - a.score;
+	});
+	
+	var playerListSorted = [];
+	for (var i = 0; i < player_lst.length; i++) {
+		//mafrood lsa el username
+		playerListSorted.push({id: player_lst[i].id, score: player_lst[i].score});
+	}
+	console.log(playerListSorted);
+	io.emit("leader_board", playerListSorted);
+}
+
+
 
 function onitemPicked (data) {
 	var movePlayer = find_playerid(this.id); 
@@ -359,6 +391,7 @@ function onitemPicked (data) {
 	
 	game_instance.food_pickup.splice(game_instance.food_pickup.indexOf(object), 1);
 	
+	sortPlayerListByScore();
 
 	io.emit('itemremove', object); 
 	
@@ -375,7 +408,7 @@ function onminePicked (data) {
 	
 	//decrease player power
 	movePlayer.power -= 10; 
-	//broadcast the new power for check only 3alban
+	//broadcast the new power for updating power 
 	this.emit("lose_power", {new_power: movePlayer.power,id:movePlayer.id}); 
 
 	if(movePlayer.power<=0)
@@ -386,7 +419,8 @@ function onminePicked (data) {
 		this.broadcast.emit('remove_player', {id: this.id});
 
 		player_lst.splice(player_lst.indexOf(movePlayer), 1);
-	
+		sortPlayerListByScore();
+
 
 	}
 	
@@ -422,11 +456,8 @@ io.sockets.on('connection', function(socket){
 
 	socket.on('please_add_mine',add_mine);
 
-
-	
-       socket.on('chat message', function(msg){
+	socket.on('chat message', function(msg){
 		console.log('a user need to chat '+msg);
 		io.emit('chat message', msg);
-		});
-		
+});
 });
