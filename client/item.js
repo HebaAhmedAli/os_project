@@ -74,17 +74,21 @@ var food_object = function (id, type, startx, starty, value) {
 	this.powerup = value;
 	
 	//create a circulr phaser object for food
-	this.item = game.add.graphics(this.posx, this.posy);
+	/*this.item = game.add.graphics(this.posx, this.posy);
 	this.item.beginFill(0xFF0000);
 	this.item.lineStyle(2, 0xFF0000, 1);
 	this.item.drawCircle(0, 0, 20);
+	*/
 
+	 
+	this.item =  game.add.sprite(this.posx, this.posy, 'food');
+	this.item.scale.setTo(0.25 , 0.25 );
 	this.item.type = 'food_body';
 	this.item.id = id;
 	
-	game.physics.p2.enableBody(this.item, true);
+	game.physics.p2.enableBody(this.item, false);
 	this.item.body.clearShapes();
-	this.item.body_size = 10; 
+	this.item.body_size = 10;
 	this.item.body.addCircle(this.item.body_size, 0, 0);
 	this.item.body.data.gravityScale = 0;
 	this.item.body.data.shapes[0].sensor = true;
@@ -103,15 +107,19 @@ var mine_object = function (id, type, startx, starty, value) {
 	this.powerup = value;
 	
 	//create a circulr phaser object for food
-	this.item = game.add.graphics(this.posx, this.posy);
+	/*this.item = game.add.graphics(this.posx, this.posy);
 	this.item.beginFill(0xFFFF00);
 	this.item.lineStyle(2, 0xFFFF00, 1);
 	this.item.drawCircle(0, 0, 20);
+	*/
+
+	this.item =  game.add.sprite(this.posx, this.posy, 'bomb');
+	this.item.scale.setTo(0.15 , 0.15 );
 
 	this.item.type = 'mine_body';
 	this.item.id = id;
 	
-	game.physics.p2.enableBody(this.item, true);
+	game.physics.p2.enableBody(this.item, false);
 	this.item.body.clearShapes();
 	this.item.body_size = 10; 
 	this.item.body.addCircle(this.item.body_size, 0, 0);

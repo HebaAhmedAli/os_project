@@ -183,8 +183,13 @@ function onKilled (data) {
 
 function onlose_power(data)
 {
+
+	update_power_leaderB(data);
+
 	console.log("id: "+data.id+" power: "+data.new_power)
 }
+
+
 
 //This is where we use the socket id. 
 //Search through enemies list to find the right enemy of the id.
@@ -196,8 +201,97 @@ function findplayerbyid (id) {
 	}
 }
 
+function createLeaderBoard() {
+	var leaderBox = game.add.graphics(game.width * 0.81, game.height * 0.05);
+	leaderBox.fixedToCamera = true;
+	// draw a rectangle
+	leaderBox.beginFill(0xD3D3D3, 0.3);
+    leaderBox.lineStyle(2, 0x202226, 1);
+    leaderBox.drawRect(0, 0, 300, 400);
+	
+	var style = { font: "13px Press Start 2P", fill: "black", align: "left", fontSize: '18px'};
+	
+	leader_text = game.add.text(10, 50, "", style);
+	leader_text.anchor.set(0);
+
+	leader_text_pow = game.add.text(10, 10, "", style);
+	//leader_text_pow.anchor.set(0);
+
+	leaderBox.addChild(leader_text);
+
+	leaderBox.addChild(leader_text_pow);
+
+}
+
+
+function update_power_leaderB(data)
+{
+
+	
+	var board_string = ""; 
+	board_string = board_string.concat("My Power",": ",(data.new_power).toString() + "\n");
+	leader_text_pow.setText(board_string);
+
+}
+
+//leader board
+function lbupdate (data) {
+	//this is the final board string.
+	var board_string = ""; 
+	var maxlen = 10;
+	var maxPlayerDisplay = 10;
+	var mainPlayerShown = false;
+	
+	for (var i = 0;  i < data.length; i++) {
+		//if the mainplayer is shown along the iteration, set it to true
+	
+		if (mainPlayerShown && i >= maxPlayerDisplay) {
+			break;
+		}
+		
+		//if the player's rank is very low, we display maxPlayerDisplay - 1 names in the leaderboard
+		// and then add three dots at the end, and show player's rank.
+		if (!mainPlayerShown && i >= maxPlayerDisplay - 1 && socket.id == data[i].id) {
+			board_string = board_string.concat(".\n");
+			board_string = board_string.concat(".\n");
+			board_string = board_string.concat(".\n");
+			mainPlayerShown = true;
+		}
+		
+		//here we are checking if user id is greater than 10 characters, if it is 
+		//it is too long, so we're going to trim it.
+		if (data[i].id.length >= 10) {
+			var username = data[i].id;
+			var temp = ""; 
+			for (var j = 0; j < maxlen; j++) {
+				temp += username[j];
+			}
+			
+			temp += "...";
+			username = temp;
+		
+			board_string = board_string.concat(i + 1,": ");
+			board_string = board_string.concat(username," ",(data[i].score).toString() + "\n");
+		
+		} else {
+			board_string = board_string.concat("\n");
+		}
+		
+	}
+	
+	console.log(board_string);
+	leader_text.setText(board_string); 
+}
+
+
+
 main.prototype = {
 	preload: function() {
+
+		//load assets for coin and bomb
+		game.load.image('food', 'client/asset/coin2.png');	
+		game.load.image('bomb', 'client/asset/bomb.png');	
+
 		game.stage.disableVisibilityChange = true;
 		game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 		game.world.setBounds(0, 0, gameProperties.gameWidth, gameProperties.gameHeight, false, false, false, false);
@@ -209,9 +303,7 @@ main.prototype = {
 		// physics start system
 		//game.physics.p2.setImpactEvents(true);
 
-		//load assets for coin and bomb
-		game.load.image('food', 'client/asset/coin2.png');	
-		game.load.image('bomb', 'client/asset/bomb.png');	
+		
 
     },
 	
@@ -227,6 +319,8 @@ main.prototype = {
 	        // send the server our initial position and tell it we are connected
 	        socket.emit('new_player', {x: 0, y: 0, angle: 0});
 		}
+		//socket.on("connect", onsocketConnected);
+
 		//socket.on("connect", onsocketConnected); 
 		
 		//listen to new enemy connections
@@ -252,9 +346,11 @@ main.prototype = {
 		socket.on('item_update', onitemUpdate); 
 		//mine update
 		socket.on('mine_update', onmineUpdate); 
-
+		socket.on ('leader_board', lbupdate); 
 
 		document.addEventListener('keydown', keyDown);
+
+		createLeaderBoard();
 	},
 	
 	update: function () {
