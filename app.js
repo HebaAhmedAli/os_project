@@ -180,7 +180,7 @@ function onNewplayer (data) {
 	console.log("created new player with id " + this.id);
 	newPlayer.id = this.id; 	
 	
-	this.emit('create_player', {size: newPlayer.size});
+	//this.emit('create_player', {size: newPlayer.size});
 	
 	//information to be sent to all clients except sender
 	var current_info = {
