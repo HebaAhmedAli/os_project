@@ -14,6 +14,9 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
+
+
+
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
 
@@ -418,4 +421,12 @@ io.sockets.on('connection', function(socket){
 	socket.on('mine_picked', onminePicked);
 
 	socket.on('please_add_mine',add_mine);
+
+
+	
+       socket.on('chat message', function(msg){
+		console.log('a user need to chat '+msg);
+		io.emit('chat message', msg);
+		});
+		
 });
