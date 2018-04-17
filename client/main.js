@@ -209,12 +209,25 @@ main.prototype = {
 		// physics start system
 		//game.physics.p2.setImpactEvents(true);
 
+		//load assets for coin and bomb
+		game.load.image('food', 'client/asset/coin2.png');	
+		game.load.image('bomb', 'client/asset/bomb.png');	
+
     },
 	
 	create: function () {
 		game.stage.backgroundColor = 0xE1A193;;
 		console.log("client started");
-		socket.on("connect", onsocketConnected); 
+
+		if(socket.connected)
+		{
+			console.log("connected to server my check"); 
+	         createPlayer();
+	         gameProperties.in_game = true;
+	        // send the server our initial position and tell it we are connected
+	        socket.emit('new_player', {x: 0, y: 0, angle: 0});
+		}
+		//socket.on("connect", onsocketConnected); 
 		
 		//listen to new enemy connections
 		socket.on("new_enemyPlayer", onNewPlayer);
@@ -239,6 +252,7 @@ main.prototype = {
 		socket.on('item_update', onitemUpdate); 
 		//mine update
 		socket.on('mine_update', onmineUpdate); 
+
 
 		document.addEventListener('keydown', keyDown);
 	},
