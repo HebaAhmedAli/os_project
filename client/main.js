@@ -20,17 +20,17 @@ var gameProperties = {
 var main = function(game){
 };
 
-function onsocketConnected () {
+/*function onsocketConnected () {
 	console.log("connected to server"); 
 	createPlayer();
 	gameProperties.in_game = true;
 	// send the server our initial position and tell it we are connected
 	socket.emit('new_player', {x: 0, y: 0, angle: 0});
-}
+}*/
 
 function keyDown(event) {
-  console.log(event);
- console.log(event.keyCode);  
+  //console.log(event);
+ //console.log(event.keyCode);  
   if(event.keyCode==32 )
   {
   	var pointer = game.input.mousePointer;
@@ -49,7 +49,7 @@ function onRemovePlayer (data) {
 	var removePlayer = findplayerbyid(data.id);
 	// Player not found
 	if (!removePlayer) {
-		console.log('Player not found: ', data.id)
+		//console.log('Player not found: ', data.id)
 		return;
 	}
 	
@@ -135,8 +135,7 @@ function onEnemyMove (data) {
 	}
 	
 	var newPointer = {
-		x: data.x,
-		y: data.y, 
+		
 		worldX: data.x,
 		worldY: data.y, 
 	}
@@ -144,7 +143,7 @@ function onEnemyMove (data) {
 	var distance = distanceToPointer(movePlayer.player, newPointer);
 	speed = distance/0.05;
 	
-	movePlayer.rotation = movetoPointer(movePlayer.player, speed, newPointer);
+	movePlayer.angle = movetoPointer(movePlayer.player, speed, newPointer);
 }
 
 //we're receiving the calculated position from the server and changing the player position
@@ -152,8 +151,7 @@ function onInputRecieved (data) {
 	
 	//we're forming a new pointer with the new position
 	var newPointer = {
-		x: data.x,
-		y: data.y, 
+		
 		worldX: data.x,
 		worldY: data.y, 
 	}
@@ -165,7 +163,7 @@ function onInputRecieved (data) {
 	speed = distance/0.05;
 	
 	//move to the new position. 
-	player.rotation = movetoPointer(player, speed, newPointer);
+	player.angle = movetoPointer(player, speed, newPointer);
 	//player.rotation=false;
     //	player.body.rotation=false;
 }
@@ -173,7 +171,7 @@ function onInputRecieved (data) {
 
 function onGained (data) {
 
- console.log("id: "+data.id+" score: "+data.new_score)
+// console.log("id: "+data.id+" score: "+data.new_score)
 }
 
 function onKilled (data) {
@@ -186,7 +184,7 @@ function onlose_power(data)
 
 	update_power_leaderB(data);
 
-	console.log("id: "+data.id+" power: "+data.new_power)
+	//console.log("id: "+data.id+" power: "+data.new_power)
 }
 
 
@@ -279,7 +277,7 @@ function lbupdate (data) {
 		
 	}
 	
-	console.log(board_string);
+	//console.log(board_string);
 	leader_text.setText(board_string); 
 }
 
@@ -365,8 +363,7 @@ main.prototype = {
 					
 			//Send a new position data to the server 
 			socket.emit('input_fired', {
-				pointer_x: pointer.x, 
-				pointer_y: pointer.y, 
+				
 				pointer_worldx: pointer.worldX, 
 				pointer_worldy: pointer.worldY, 
 			});
