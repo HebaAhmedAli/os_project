@@ -6,6 +6,7 @@ var unique = require('node-uuid')
 
 var app = express();
 var serv = require('http').Server(app);
+
 //get the functions required to move players in the server.
 var physicsPlayer = require('./server/physics/playermovement.js');
 
@@ -16,14 +17,16 @@ app.use('/client',express.static(__dirname + '/client'));
 
 //app.use('/asset',express.static(__dirname + '/asset'));
 
+
+
 serv.listen(process.env.PORT || 2000);
 console.log("Server started.");
 
 var player_lst = [];
 
 //needed for physics update 
-var startTime = (new Date).getTime();
-var lastTime;
+/*var startTime = (new Date).getTime();
+var lastTime;*/
 var timeStep= 1/70; 
 
 //the physics world in the server. This is where all the physics happens. 
@@ -91,10 +94,10 @@ setInterval(heartbeat, 1000/60);
 
 //Steps the physics world. 
 function physics_hanlder() {
-	var currentTime = (new Date).getTime();
+	/*var currentTime = (new Date).getTime();
 	timeElapsed = currentTime - startTime;
 	var dt = lastTime ? (timeElapsed - lastTime) / 1000 : 0;
-    dt = Math.min(1 / 10, dt);
+    dt = Math.min(1 / 10, dt);*/
     world.step(timeStep);
 }
 
@@ -203,7 +206,7 @@ function onNewplayer (data) {
 			size: existingPlayer.size
 
 		};
-		console.log("pushing player");
+		//console.log("pushing player");
 		//send message to the sender-client only
 		this.emit("new_enemyPlayer", player_info);
 	}
@@ -263,15 +266,16 @@ function onInputFired (data) {
 	//Make a new pointer with the new inputs from the client. 
 	//contains player positions in server
 	var serverPointer = {
-		x: data.pointer_x,
-		y: data.pointer_y,
+		
 		worldX: data.pointer_worldx, 		
 		worldY: data.pointer_worldy
 	}
 	
 	//moving the player to the new inputs from the player
-	if (physicsPlayer.distanceToPointer(movePlayer, serverPointer) <= 30) {
-		movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, 0, serverPointer, 1000);
+	var dist=physicsPlayer.distanceToPointer(movePlayer, serverPointer);
+	if (dist <= 30) {
+		//movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, 0, serverPointer, 1000);
+		movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, dist, serverPointer);
 	} else {
 		movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, movePlayer.speed, serverPointer);	
 	}
@@ -376,8 +380,8 @@ function onitemPicked (data) {
 
 	var object = find_food(data.id);	
 	if (!object) {
-		console.log(data);
-		console.log("could not find object");
+		//console.log(data);
+		//console.log("could not find object");
 		return;
 	}
 	
@@ -401,8 +405,8 @@ function onminePicked (data) {
 
 	var object = find_mine(data.id);	
 	if (!object) {
-		console.log(data);
-		console.log("could not find object");
+		//console.log(data);
+		//console.log("could not find object");
 		return;
 	}
 	

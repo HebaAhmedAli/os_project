@@ -1,17 +1,9 @@
-function movetoPointer (displayObject, speed, pointer, maxTime) {
+function movetoPointer (displayObject, speed, pointer) {
 
 
-	pointer = pointer;
-	if (maxTime === undefined) { maxTime = 0; }
-
+	
 	var angle = angleToPointer(displayObject, pointer);
 
-	if (maxTime > 0)
-	{
-		//  We know how many pixels we need to move, but how fast?
-		speed = distanceToPointer(displayObject, pointer) / (maxTime / 1000);
-	}
-	
 
 
 	displayObject.playerBody.velocity[0] = Math.cos(angle) * speed;
@@ -22,33 +14,33 @@ function movetoPointer (displayObject, speed, pointer, maxTime) {
 
 }
 
-function distanceToPointer (displayObject, pointer, world) {
+function distanceToPointer (displayObject, pointer) {
+
+       if(pointer.worldX>4000)
+          pointer.worldX=4000;
+        else if(pointer.worldX<0)
+            pointer.worldX=0;
+
+        if(pointer.worldY>4000)
+          pointer.worldY=4000;
+        else if(pointer.worldY<0)
+            pointer.worldY=0;
+
+		var dx = displayObject.playerBody.position[0] - pointer.worldX;
 
 
-        if (world === undefined) { world = false; }
-
-        var dx = (world) ? displayObject.world.x - pointer.worldX : displayObject.playerBody.position[0] - pointer.worldX;
-        var dy = (world) ? displayObject.world.y - pointer.worldY : displayObject.playerBody.position[1] - pointer.worldY;
+        var dy = displayObject.playerBody.position[1] - pointer.worldY;
 
         return Math.sqrt(dx * dx + dy * dy);
 
 }
 
-function angleToPointer (displayObject, pointer, world) {
+function angleToPointer (displayObject, pointer) {
 
-        
-        if (world === undefined) { world = false; }
-
-        if (world)
-        {
-            return Math.atan2(pointer.worldY - displayObject.world.y, pointer.worldX - displayObject.world.x);
-        }
-        else
-        {
+       
             return Math.atan2(pointer.worldY - displayObject.playerBody.position[1], 
 			pointer.worldX - displayObject.playerBody.position[0]);
-        }
-
+       
 }
 
 //we export these three functions 
