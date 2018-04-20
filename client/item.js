@@ -7,7 +7,7 @@ function finditembyid (id) {
 	
 	for (var i = 0; i < food_pickup.length; i++) {
 
-		if (food_pickup[i].id == id) {
+		if (food_pickup[i].id == id) { 
 			return food_pickup[i]; 
 		}
 	}

@@ -18,7 +18,7 @@ var gameProperties = {
 };
 
 
-
+var every_50=true;
 var main = function(game){
 };
 
@@ -142,15 +142,15 @@ function onEnemyMove (data) {
 	}
 	
 	var newPointer = {
-		
-		worldX: data.x,
-		worldY: data.y, 
+		worldX:data.worldX,
+		worldY:data.worldY,
+		velocityX: data.vx,
+		velocityY: data.vy, 
+		dx:data.dx,
+		dy:data.dy
 	}
 	
-	var distance = distanceToPointer(movePlayer.player, newPointer);
-	speed = distance/0.05;
-	
-	movePlayer.angle = movetoPointer(movePlayer.player, speed, newPointer);
+	move_player(movePlayer.player, newPointer);
 }
 
 //we're receiving the calculated position from the server and changing the player position
@@ -158,9 +158,12 @@ function onInputRecieved (data) {
 	
 	//we're forming a new pointer with the new position
 	var newPointer = {
-		
-		worldX: data.x,
-		worldY: data.y, 
+		worldX:data.worldX,
+		worldY:data.worldY,
+		velocityX: data.vx,
+		velocityY: data.vy,
+		dx:data.dx,
+		dy:data.dy
 	}
 	
 	//var distance = distanceToPointer(player, newPointer);
@@ -299,9 +302,9 @@ main.prototype = {
 
 		game.stage.disableVisibilityChange = true;
 		game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-		game.world.setBounds(0, 0, gameProperties.gameWidth, gameProperties.gameHeight, false, false, false, false);
+		game.world.setBounds(0, 0, gameProperties.gameWidth, gameProperties.gameHeight, true, true, true, true);
 		game.physics.startSystem(Phaser.Physics.P2JS);
-		game.physics.p2.setBoundsToWorld(false, false, false, false, false)
+		game.physics.p2.setBoundsToWorld();
 		game.physics.p2.gravity.y = 0;
 		game.physics.p2.applyGravity = false; 
 		game.physics.p2.enableBody(game.physics.p2.walls, false); 
@@ -362,9 +365,21 @@ main.prototype = {
 		// emit the player input
 		
 		//move the player when the player is made 
+		
 		if (gameProperties.in_game) {
 		
-			//we're making a new mouse pointer and sending this input to 
+		setTimeout(function() {
+           
+			every_50= true;
+
+		}, 50);
+
+	
+	       if(every_50)
+	       	 {
+	       	 	every_50=false;
+
+	       	 //we're making a new mouse pointer and sending this input to 
 			//the server.
 			var pointer = game.input.mousePointer;
 					
@@ -374,6 +389,9 @@ main.prototype = {
 				pointer_worldx: pointer.worldX, 
 				pointer_worldy: pointer.worldY, 
 			});
+
+	       	 }
+			
 		}
 	}
 }
