@@ -171,13 +171,14 @@ function onNewplayer (data) {
 	
 	//create an instance of player body 
 	playerBody = new p2.Body ({
-		mass: 0,
-		position: [0,0],
-		fixedRotation: true
+		//mass: 0,
+		position: [0,0]
+		//fixedRotation: true
 	});
 	
 	//add the playerbody into the player object 
 	newPlayer.playerBody = playerBody;
+	//console.log("px "+newPlayer.playerBody.position[0]+" py "+newPlayer.playerBody.position[1]);
 	world.addBody(newPlayer.playerBody);
 	
 	console.log("created new player with id " + this.id);
@@ -249,9 +250,10 @@ function onInputFired (data) {
 	
 	
 	if (!movePlayer) {
+		//console.log('no player'); 
+
 		return;
-		console.log('no player'); 
-	}
+			}
 
 	//when sendData is true, we send the data back to client. 
 	if (!movePlayer.sendData) {
@@ -272,13 +274,15 @@ function onInputFired (data) {
 	}
 	
 	//moving the player to the new inputs from the player
-	var dist=physicsPlayer.distanceToPointer(movePlayer, serverPointer);
+	/*var dist=physicsPlayer.distanceToPointer(movePlayer, serverPointer);
 	if (dist <= 30) {
 		//movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, 0, serverPointer, 1000);
 		movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, dist, serverPointer);
 	} else {
 		movePlayer.playerBody.angle = physicsPlayer.movetoPointer(movePlayer, movePlayer.speed, serverPointer);	
-	}
+	}*/
+
+	physicsPlayer.move_player(movePlayer, serverPointer);
 	
 	//new player position to be sent back to client. 
 	var info = {
