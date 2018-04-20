@@ -17,6 +17,8 @@ var gameProperties = {
 	in_game: false,
 };
 
+
+
 var main = function(game){
 };
 
@@ -71,6 +73,7 @@ function createPlayer () {
 	//set the initial size;
 	player.initial_size = player.radius;
 
+  
 	// draw a shape
 	game.physics.p2.enableBody(player, true);
 	player.body.clearShapes();
@@ -107,6 +110,10 @@ var remote_player = function (id, startx, starty, start_angle) {
 	this.player.body_size = this.player.radius; 
 	this.player.type = "player_body";
 	this.player.id = this.id;
+
+
+
+
 
 	// draw a shape
 	game.physics.p2.enableBody(this.player, true);
@@ -156,16 +163,16 @@ function onInputRecieved (data) {
 		worldY: data.y, 
 	}
 	
-	var distance = distanceToPointer(player, newPointer);
+	//var distance = distanceToPointer(player, newPointer);
+	move_player(player, newPointer);
 	//we're receiving player position every 50ms. We're interpolating 
 	//between the current position and the new position so that player
 	//does jerk. 
-	speed = distance/0.05;
+	//speed = distance/0.05;
 	
 	//move to the new position. 
-	player.angle = movetoPointer(player, speed, newPointer);
-	//player.rotation=false;
-    //	player.body.rotation=false;
+	//player.angle = movetoPointer(player, speed, newPointer);
+	
 }
 
 
