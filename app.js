@@ -58,7 +58,7 @@ var Player = function (startX, startY, startAngle) {
   this.x = startX
   this.y = startY
   this.angle = startAngle
-  this.speed = 500;
+  this.speed =20;
   //We need to intilaize with true.
   this.sendData = true;
  
@@ -66,6 +66,8 @@ var Player = function (startX, startY, startAngle) {
   this.size=100;
   this.score=50;
   this.power=100;
+  this.dx=0;
+  this.dy=0;
 }
 
 
@@ -256,14 +258,14 @@ function onInputFired (data) {
 			}
 
 	//when sendData is true, we send the data back to client. 
-	if (!movePlayer.sendData) {
+	/*if (!movePlayer.sendData) {
 		return;
 	}
 	
 	//every 50ms, we send the data. 
 	setTimeout(function() {movePlayer.sendData = true}, 50);
 	//we set sendData to false when we send the data. 
-	movePlayer.sendData = false;
+	movePlayer.sendData = false;*/
 	
 	//Make a new pointer with the new inputs from the client. 
 	//contains player positions in server
@@ -286,10 +288,17 @@ function onInputFired (data) {
 	
 	//new player position to be sent back to client. 
 	var info = {
-		x: movePlayer.playerBody.position[0],
-		y: movePlayer.playerBody.position[1],
+		vx: movePlayer.playerBody.velocity[0],
+		vy: movePlayer.playerBody.velocity[1],
+		worldX: data.pointer_worldx, 		
+		worldY: data.pointer_worldy,
+		dx:movePlayer.dx,
+		dy:movePlayer.dy,
 		angle: movePlayer.playerBody.angle
 	}
+
+	 //console.log("x after: "+movePlayer.playerBody.position[0]+" y after: "+movePlayer.playerBody.position[1]);
+
 
 	//send to sender (not to every clients). 
 	this.emit('input_recieved', info);
@@ -297,8 +306,12 @@ function onInputFired (data) {
 	//data to be sent back to everyone except sender 
 	var moveplayerData = {
 		id: movePlayer.id, 
-		x: movePlayer.playerBody.position[0],
-		y: movePlayer.playerBody.position[1],
+		vx: movePlayer.playerBody.velocity[0],
+		vy: movePlayer.playerBody.velocity[1],
+		worldX: data.pointer_worldx, 		
+		worldY: data.pointer_worldy,
+		dx:movePlayer.dx,
+		dy:movePlayer.dy,
 		angle: movePlayer.playerBody.angle,
 	}
 	
