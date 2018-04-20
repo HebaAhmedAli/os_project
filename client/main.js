@@ -362,21 +362,9 @@ main.prototype = {
 		// emit the player input
 		
 		//move the player when the player is made 
-		var every_50=true;
 		if (gameProperties.in_game) {
 		
-		setTimeout(function() {
-           
-			every_50= true;
-
-		}, 50);
-
-	
-	       if(every_50)
-	       	 {
-	       	 	every_50=false;
-
-	       	 //we're making a new mouse pointer and sending this input to 
+			//we're making a new mouse pointer and sending this input to 
 			//the server.
 			var pointer = game.input.mousePointer;
 					
@@ -386,9 +374,6 @@ main.prototype = {
 				pointer_worldx: pointer.worldX, 
 				pointer_worldy: pointer.worldY, 
 			});
-
-	       	 }
-			
 		}
 	}
 }
