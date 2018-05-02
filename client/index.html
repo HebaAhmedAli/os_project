@@ -10,47 +10,65 @@
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
+      #messages li:nth-child(odd) { background: #eee; }  
       #messages { margin-bottom: 40px }
     </style>
 	</head>
 	<body>
+
+
+
+
+
 	
-		<div id="gameDiv">
+   <div id = "signDiv">
+      <div class="sign-up">ENTER</div>
+      <form class="hidden form">
+      <input id ="signdivusername" type="text" placeholder="Username"/>
+      </form>
+      <button id = "entername" class="hidden"><span class="text">PLAY</span></button>
+    </div>
+
+
+
+		<div id="gameDiv" >
 		</div>
 
 		 <ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
-    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+   
+    <!-- <script src="https://code.jquery.com/jquery-1.11.1.js"></script> -->
     <script>
-      $(function () {
-        var socket = io();
-        $('form').submit(function(){
-          console.log("before emit"+$('#m').val());
-          socket.emit('chat message', $('#m').val());
-          $('#m').val('');
-          return false;
-        });
-        socket.on('chat message', function(msg){
-          console.log(msg);
-          $('#messages').append($('<li>').text(msg));
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-      });
+      // $(function () {
+      //   //var socket = io();
+      //   $('form').submit(function(){
+      //     console.log("before emit"+$('#m').val());
+      //     socket.emit('chat message', $('#m').val());
+      //     $('#m').val('');
+      //     return false;
+      //   });
+      //   socket.on('chat message', function(msg){
+      //     console.log(msg);
+      //     $('#messages').append($('<li>').text(msg));
+      //     window.scrollTo(0, document.body.scrollHeight);
+      //   });
+      // });
     </script>
 	
 	</body>
 
-	<script src="client/lib/phaser.js"></script>
+
+  <script src="client/lib/p5.js"></script>
+  <script src="client/lib/p5.play.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="client/player.js"></script>
 	<script src="client/colide.js"></script>
 	<script src="client/item.js"></script>
 	<script src="client/main.js"></script>
-	
+	<script src="client/start.js"></script>
+  
 	
 	<script>
 	</script>

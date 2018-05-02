@@ -1,6 +1,8 @@
 //the food list
-var food_pickup = [];
-var mine_pickup = [];
+var food_pickup=[];
+//var food_sprites;
+//var mine_sprites;
+var mine_pickup=[];
 
 // search through food list to find the food object
 function finditembyid (id) {
@@ -45,8 +47,11 @@ function onitemremove (data) {
 	removeItem = finditembyid(data.id);
 	food_pickup.splice(food_pickup.indexOf(removeItem), 1); 
 	
-	//destroy the phaser object 
-	removeItem.item.destroy(true,false);
+	//console.log("lentgh before "+food_pickup.length)
+	//destroy the p5 object 
+	removeItem.item.remove();
+
+	//console.log("lentgh after "+food_pickup.length)
 	
 }
 
@@ -57,13 +62,15 @@ function onmineremove (data) {
 	removeItem = findminebyid(data.id);
 	mine_pickup.splice(mine_pickup.indexOf(removeItem), 1); 
 	
-	//destroy the phaser object 
-	removeItem.item.destroy(true,false);
+	//destroy the p5 object 
+	removeItem.item.remove();
+
+
 	
 }
 
 // the food class
-var food_object = function (id, type, startx, starty, value) {
+var food_object = function (id, type, startx, starty) {
 	// unique id for the food.
 	//generated in the server with node-uuid
 	this.id = id; 
@@ -71,33 +78,36 @@ var food_object = function (id, type, startx, starty, value) {
 	//positinon of the food
 	this.posx = startx;  
 	this.posy = starty; 
-	this.powerup = value;
+	//this.powerup = value;
 	
-	//create a circulr phaser object for food
-	/*this.item = game.add.graphics(this.posx, this.posy);
-	this.item.beginFill(0xFF0000);
-	this.item.lineStyle(2, 0xFF0000, 1);
-	this.item.drawCircle(0, 0, 20);
-	*/
+	
 
 	 
-	this.item =  game.add.sprite(this.posx, this.posy, 'food');
-	this.item.scale.setTo(0.25 , 0.25 );
+	this.item =  s1.createSprite(this.posx,this.posy,10,10);
+	food_img.resize(76,76);
+    this.item.addImage(food_img);
+	
+	//food_sprites.add(this.item);
+
+
+	
 	this.item.type = 'food_body';
 	this.item.id = id;
 	
-	game.physics.p2.enableBody(this.item, false);
+
+
+	/*game.physics.p2.enableBody(this.item, false);
 	this.item.body.clearShapes();
 	this.item.body_size = 10;
 	this.item.body.addCircle(this.item.body_size, 0, 0);
 	this.item.body.data.gravityScale = 0;
-	this.item.body.data.shapes[0].sensor = true;
+	this.item.body.data.shapes[0].sensor = true;*/
 
 
 }
 
 
-var mine_object = function (id, type, startx, starty, value) {
+var mine_object = function (id, type, startx, starty) {
 	// unique id for the food.
 	//generated in the server with node-uuid
 	this.id = id; 
@@ -105,7 +115,7 @@ var mine_object = function (id, type, startx, starty, value) {
 	//positinon of the food
 	this.posx = startx;  
 	this.posy = starty; 
-	this.powerup = value;
+	//this.powerup = value;
 	
 	//create a circulr phaser object for food
 	/*this.item = game.add.graphics(this.posx, this.posy);
@@ -113,18 +123,21 @@ var mine_object = function (id, type, startx, starty, value) {
 	this.item.lineStyle(2, 0xFFFF00, 1);
 	this.item.drawCircle(0, 0, 20);
 	*/
-
-	this.item =  game.add.sprite(this.posx, this.posy, 'bomb');
-	this.item.scale.setTo(0.15 , 0.15 );
+ 
+	this.item =  s1.createSprite(this.posx,this.posy,10,10);
+	bomb_img.resize(76,76);
+    this.item.addImage(bomb_img);
+	
+	//mine_sprites.add(this.item);
 
 	this.item.type = 'mine_body';
 	this.item.id = id;
 	
-	game.physics.p2.enableBody(this.item, false);
+	/*game.physics.p2.enableBody(this.item, false);
 	this.item.body.clearShapes();
 	this.item.body_size = 10; 
 	this.item.body.addCircle(this.item.body_size, 0, 0);
 	this.item.body.data.gravityScale = 0;
-	this.item.body.data.shapes[0].sensor = true;
+	this.item.body.data.shapes[0].sensor = true;*/
 
 }

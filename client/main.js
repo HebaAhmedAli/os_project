@@ -1,26 +1,33 @@
-var socket; 
-socket = io.connect();
-
 
 canvas_width = window.innerWidth * window.devicePixelRatio;
 canvas_height = window.innerHeight * window.devicePixelRatio;
 
-game = new Phaser.Game(canvas_width,canvas_height, Phaser.CANVAS, 'gameDiv');
+//game = new Phaser.Game(canvas_width,canvas_height, Phaser.CANVAS, 'gameDiv');
+
 
 //the enemy player list 
-var enemies = [];
+var enemies=[];
 
-var gameProperties = { 
-	gameWidth: 4000,
-	gameHeight: 4000,
-	game_elemnt: "gameDiv",
-	in_game: false,
+// player score list to be updated when any player picks a coin 
+var player_scores = [];  
+var player;
+var my_power; 
+var s1;
+
+var newPointer= {
+	worldX:0,
+	worldY:0,
+	speed: 0,
+	acc: 0
 };
+
+var player_img,food_img,bomb_img;
 
 
 var every_50=true;
-var main = function(game){
-};
+
+var old_mousex,old_mousey;
+
 
 /*function onsocketConnected () {
 	console.log("connected to server"); 
@@ -32,15 +39,17 @@ var main = function(game){
 
 function keyDown(event) {
   //console.log(event);
- //console.log(event.keyCode);  
-  if(event.keyCode==32 )
+
+  if(event.keyCode==65 )
   {
-  	var pointer = game.input.mousePointer;
-    socket.emit('please_add_mine',{
-				pointer_x: pointer.worldX, 
-				pointer_y: pointer.worldY, 
-				
-			});
+
+  	console.log("key "+event.keyCode);  
+  	//var pointer = game.input.mousePointer;
+  	socket.emit('please_add_mine',{
+  		pointer_x: player.position.x, 
+  		pointer_y: player.position.y, 
+
+  	});
   }
 
 }
@@ -55,71 +64,51 @@ function onRemovePlayer (data) {
 		return;
 	}
 	
-	removePlayer.player.destroy();
+	removePlayer.player.remove();
 	enemies.splice(enemies.indexOf(removePlayer), 1);
 }
 
+
+
+
 function createPlayer () {
-	player = game.add.graphics(0, 0);
-	player.radius = 100;
 
-	// set a fill and line style
-	player.beginFill(0xffd900);
-	player.lineStyle(2, 0xffd900, 1);
-	player.drawCircle(0, 0, player.radius * 2);
-	player.endFill();
-	player.anchor.setTo(0.5,0.5);
-	player.body_size = player.radius; 
-	//set the initial size;
-	player.initial_size = player.radius;
-
+/*player = s1.createSprite(0,0,20,20);
   
-	// draw a shape
-	game.physics.p2.enableBody(player, true);
-	player.body.clearShapes();
-	player.body.addCircle(player.body_size, 0 , 0); 
-	player.body.data.shapes[0].sensor = true;
-	//enable collision and when it makes a contact with another body, call player_coll
-	player.body.onBeginContact.add(player_coll, this); 
+player.addAnimation("moving", "client/asset2/player.png", "client/asset2/player.png");
+*/ 
+
+ socket.emit('new_player', {x: 0, y: 0});
+
+
+player = s1.createSprite(0, 0,20,20);
+player_img.resize(150,150);
+player.addImage(player_img);
+
+
+
 	
-	//We need this line to make camera follow player
-	game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.5, 0.5);
 }
 
 // this is the enemy class. 
-var remote_player = function (id, startx, starty, start_angle) {
-	this.x = startx;
-	this.y = starty;
-	//this is the unique socket id. We use it as a unique name for enemy
-	this.id = id;
-	this.angle = start_angle;
+var remote_player = function (id, startx, starty) {
 	
-	this.player = game.add.graphics(this.x , this.y);
-	//intialize the size with the server value
-	this.player.radius =100;
+	this.id = id;
+	this.x=startx;
+	this.y=starty;
 
-	// set a fill and line style
-	this.player.beginFill(0xffd900);
-	this.player.lineStyle(2, 0xffd900, 1);
-	this.player.drawCircle(0, 0, this.player.radius * 2);
-	this.player.endFill();
-	this.player.anchor.setTo(0.5,0.5);
-	//we set the initial size;
-	this.initial_size = 100;
-	//we set the body size to the current player radius
-	this.player.body_size = this.player.radius; 
-	this.player.type = "player_body";
-	this.player.id = this.id;
+/*
+ this.player = s1.createSprite(startx, starty,20,20);
+  
+ this.player.addAnimation("moving", "client/asset2/player.png", "client/asset2/player.png");
+ */
+
+ this.player = s1.createSprite(startx, starty,20,20);
+  player_img.resize(150,150);
+ this.player.addImage(player_img);
 
 
-
-
-
-	// draw a shape
-	game.physics.p2.enableBody(this.player, true);
-	this.player.body.clearShapes();
-	this.player.body.addCircle(this.player.body_size, 0 , 0); 
-	this.player.body.data.shapes[0].sensor = true;
+	
 
 }
 
@@ -127,7 +116,8 @@ var remote_player = function (id, startx, starty, start_angle) {
 //We create a new enemy in our game.
 function onNewPlayer (data) {
 	//enemy object 
-	var new_enemy = new remote_player(data.id, data.x, data.y, data.angle); 
+	console.log(" new enemy ");
+	var new_enemy = new remote_player(data.id, data.x, data.y); 
 	enemies.push(new_enemy);
 }
 
@@ -141,60 +131,62 @@ function onEnemyMove (data) {
 		return;
 	}
 	
-	var newPointer = {
-		worldX:data.worldX,
-		worldY:data.worldY,
-		velocityX: data.vx,
-		velocityY: data.vy, 
-		dx:data.dx,
-		dy:data.dy
-	}
 	
-	move_player(movePlayer.player, newPointer);
+  /*var x_sign=-1,y_sign=-1;
+  if(data.worldX-movePlayer.player.position.x>0)
+     x_sign=1;
+  
+  if(data.worldY-movePlayer.player.position.y>0)
+     y_sign=1;
+  
+   //console.log((data.worldX-player.position.x),(data.worldY-player.position.y));
+ 
+  movePlayer.player.velocity.x = x_sign*data.speed;
+  movePlayer.player.velocity.y =y_sign*data.speed;*/
+
+  movePlayer.player.velocity.x = (data.worldX-movePlayer.player.position.x)/30;
+  movePlayer.player.velocity.y =(data.worldY-movePlayer.player.position.y)/30;
+
 }
 
 //we're receiving the calculated position from the server and changing the player position
 function onInputRecieved (data) {
-	
-	//we're forming a new pointer with the new position
-	var newPointer = {
-		worldX:data.worldX,
-		worldY:data.worldY,
-		velocityX: data.vx,
-		velocityY: data.vy,
-		dx:data.dx,
-		dy:data.dy
-	}
-	
-	//var distance = distanceToPointer(player, newPointer);
-	move_player(player, newPointer);
-	//we're receiving player position every 50ms. We're interpolating 
-	//between the current position and the new position so that player
-	//does jerk. 
-	//speed = distance/0.05;
-	
-	//move to the new position. 
-	//player.angle = movetoPointer(player, speed, newPointer);
+
+
+
+   //player.maxSpeed = data.speed;
+  /*var x_sign=-1,y_sign=-1;
+  if(data.worldX-player.position.x>0)
+     x_sign=1;
+  
+  if(data.worldY-player.position.y>0)
+     y_sign=1;
+  
+   //console.log((data.worldX-player.position.x),(data.worldY-player.position.y));
+  
+  player.velocity.x = x_sign*data.speed;
+  player.velocity.y =y_sign*data.speed;*/
+
+  player.velocity.x = (data.worldX-player.position.x)/30;
+  player.velocity.y =(data.worldY-player.position.y)/30;
+
+
+  
+ // move_player(data);
 	
 }
 
 
-function onGained (data) {
-
-// console.log("id: "+data.id+" score: "+data.new_score)
-}
 
 function onKilled (data) {
 	console.log("player killed");
-	player.destroy();
+	player.remove();
 }
 
 function onlose_power(data)
 {
 
-	update_power_leaderB(data);
-
-	//console.log("id: "+data.id+" power: "+data.new_power)
+	my_power = data.new_power;
 }
 
 
@@ -202,137 +194,127 @@ function onlose_power(data)
 //This is where we use the socket id. 
 //Search through enemies list to find the right enemy of the id.
 function findplayerbyid (id) {
+
+	//console.log(enemies.length);
 	for (var i = 0; i < enemies.length; i++) {
+
 		if (enemies[i].id == id) {
 			return enemies[i]; 
 		}
 	}
 }
 
-function createLeaderBoard() {
-	var leaderBox = game.add.graphics(game.width * 0.81, game.height * 0.05);
-	leaderBox.fixedToCamera = true;
-	// draw a rectangle
-	leaderBox.beginFill(0xD3D3D3, 0.3);
-    leaderBox.lineStyle(2, 0x202226, 1);
-    leaderBox.drawRect(0, 0, 300, 400);
-	
-	var style = { font: "13px Press Start 2P", fill: "black", align: "left", fontSize: '18px'};
-	
-	leader_text = game.add.text(10, 50, "", style);
-	leader_text.anchor.set(0);
-
-	leader_text_pow = game.add.text(10, 10, "", style);
-	//leader_text_pow.anchor.set(0);
-
-	leaderBox.addChild(leader_text);
-
-	leaderBox.addChild(leader_text_pow);
-
-}
+function drawLeaderBoard(s) {
 
 
-function update_power_leaderB(data)
-{
+	/*s.rectMode(s.CORNER); // Default rectMode is CORNER
+	s.fill(255); // Set fill to white
+	s.rect(canvas_width/2+player.position.x -200,player.position.y -canvas_height/2, 200, 300); // Draw white rect using CORNER mode
+*/
+
+
+	var score_text = 'Score Board\n';
+	var usermaxlen=6;
+	var maxplayerDisplay =10;
+
+	//draw power 
+
+	var power_text='My Power:  ';
+	power_text += my_power;
+	s.textSize(15);
+	s.text(power_text, canvas_width/2+player.position.x -200, player.position.y -canvas_height/2+10,200 ,300 ); // Text wraps within text box
+
+
 
 	
-	var board_string = ""; 
-	board_string = board_string.concat("My Power",": ",(data.new_power).toString() + "\n");
-	leader_text_pow.setText(board_string);
 
-}
+	// draw Score 
+	 var display = Math.min(maxplayerDisplay,player_scores.length);
 
-//leader board
-function lbupdate (data) {
-	//this is the final board string.
-	var board_string = ""; 
-	var maxlen = 10;
-	var maxPlayerDisplay = 10;
-	var mainPlayerShown = false;
-	
-	for (var i = 0;  i < data.length; i++) {
-		//if the mainplayer is shown along the iteration, set it to true
-	
-		if (mainPlayerShown && i >= maxPlayerDisplay) {
-			break;
-		}
-		
-		//if the player's rank is very low, we display maxPlayerDisplay - 1 names in the leaderboard
-		// and then add three dots at the end, and show player's rank.
-		if (!mainPlayerShown && i >= maxPlayerDisplay - 1 && socket.id == data[i].id) {
-			board_string = board_string.concat(".\n");
-			board_string = board_string.concat(".\n");
-			board_string = board_string.concat(".\n");
-			mainPlayerShown = true;
-		}
-		
-		//here we are checking if user id is greater than 10 characters, if it is 
-		//it is too long, so we're going to trim it.
-		if (data[i].id.length >= 10) {
-			var username = data[i].id;
-			var temp = ""; 
-			for (var j = 0; j < maxlen; j++) {
-				temp += username[j];
+	 //console.log("player scores len "+player_scores.length);
+	for (var i = 0; i <display; i++) {
+		//mafrood lsa el username
+		var username="";
+		if (player_scores[i].id.length > usermaxlen)
+		{
+			for (var j=0;j<=usermaxlen;j++){
+
+				username+= player_scores[i].id[j];
 			}
-			
-			temp += "...";
-			username = temp;
-		
-			board_string = board_string.concat(i + 1,": ");
-			board_string = board_string.concat(username," ",(data[i].score).toString() + "\n");
-		
-		} else {
-			board_string = board_string.concat("\n");
+			username+="...";
+
 		}
+		else username = player_scores[i].id;
+		
+		score_text+= (i+1);
+		score_text += ". ";
+		score_text += username+ " : ";
+		score_text+= player_scores[i].score
+		score_text += '\n';
+	}
+
+	if (maxplayerDisplay < player_scores.length )
+	{
+		score_text+=".\n"+".\n"+".\n";
+	}	
+
+	//console.log(score_text);
+	s.textSize(15);
+	s.text(score_text, canvas_width/2+player.position.x -200, player.position.y -canvas_height/2+50,200 ,300 ); // Text wraps within text box
+
+}
+
+//update player scores
+function scoreUpdate (data) {
+
+
+	//console.log("score update");
+	
+	player_scores.length=0;
+	for (var i = 0; i <data.length; i++) {
+		
+		
+		//mafrood lsa el username
+
+		player_scores.push({id: data[i].id, score: data[i].score});
 		
 	}
-	
-	//console.log(board_string);
-	leader_text.setText(board_string); 
+
+
+	//console.log("check push  "+player_scores[0].id)
+ 
 }
 
+var main=function(s){
+
+	s1=s;
+	s.preload=function ()
+	{
+  // load image
+  player_img = s.loadImage("client/asset/player.png");
+
+  food_img=s.loadImage("client/asset/coin2.png");	
+  bomb_img= s.loadImage("client/asset/bomb.png");	
+}
+s.setup=function(){
+
+    
+    //food_sprites = new s.Group();
+    // mine_sprites = new s.Group();
+
+	 var canvas =s.createCanvas(canvas_width,canvas_height);
+
+     //s.background(255, 0, 200);
+
+        // Move the canvas so it’s inside our <div id="sketch-holder">.
+        canvas.parent('gameDiv');
 
 
-main.prototype = {
-	preload: function() {
+        createPlayer();
 
-		//load assets for coin and bomb
-		game.load.image('food', 'client/asset/coin2.png');	
-		game.load.image('bomb', 'client/asset/bomb.png');	
 
-		game.stage.disableVisibilityChange = true;
-		game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
-		game.world.setBounds(0, 0, gameProperties.gameWidth, gameProperties.gameHeight, true, true, true, true);
-		game.physics.startSystem(Phaser.Physics.P2JS);
-		game.physics.p2.setBoundsToWorld();
-		game.physics.p2.gravity.y = 0;
-		game.physics.p2.applyGravity = false; 
-		game.physics.p2.enableBody(game.physics.p2.walls, false); 
-		// physics start system
-		//game.physics.p2.setImpactEvents(true);
 
-		
-
-    },
-	
-	create: function () {
-		game.stage.backgroundColor = 0xE1A193;;
-		console.log("client started");
-
-		if(socket.connected)
-		{
-			console.log("connected to server my check"); 
-	         createPlayer();
-	         gameProperties.in_game = true;
-	        // send the server our initial position and tell it we are connected
-	        socket.emit('new_player', {x: 0, y: 0, angle: 0});
-		}
-		//socket.on("connect", onsocketConnected);
-
-		//socket.on("connect", onsocketConnected); 
-		
-		//listen to new enemy connections
-		socket.on("new_enemyPlayer", onNewPlayer);
+        socket.on("new_enemyPlayer", onNewPlayer);
 		//listen to enemy movement 
 		socket.on("enemy_move", onEnemyMove);
 		//when received remove_player, remove the player passed; 
@@ -343,7 +325,7 @@ main.prototype = {
          //when the player gets killed
 		socket.on('killed', onKilled);
 		//when the player gains in score
-		socket.on('gained', onGained);
+		//socket.on('gained', onGained);
 
 		socket.on('lose_power',onlose_power);
 		
@@ -354,53 +336,84 @@ main.prototype = {
 		socket.on('item_update', onitemUpdate); 
 		//mine update
 		socket.on('mine_update', onmineUpdate); 
-		socket.on ('leader_board', lbupdate); 
+		socket.on ('leader_board', scoreUpdate);  
 
 		document.addEventListener('keydown', keyDown);
 
-		createLeaderBoard();
-	},
-	
-	update: function () {
-		// emit the player input
-		
-		//move the player when the player is made 
-		
-		if (gameProperties.in_game) {
-		
-		setTimeout(function() {
-           
+		//createLeaderBoard();
+		//
+		//
+		setInterval(function() {
+
 			every_50= true;
+            //console.log("every 20");
 
-		}, 50);
+		}, 40);
+        
+       /*setInterval(function() {
 
-	
-	       if(every_50)
-	       	 {
-	       	 	every_50=false;
-
-	       	 //we're making a new mouse pointer and sending this input to 
-			//the server.
-			var pointer = game.input.mousePointer;
-					
-			//Send a new position data to the server 
-			socket.emit('input_fired', {
-				
-				pointer_worldx: pointer.worldX, 
-				pointer_worldy: pointer.worldY, 
-			});
-
-	       	 }
 			
-		}
+            console.log("position ",player.position.x,player.position.y);
+            console.log("old mouse ",old_mousex,old_mousey);
+
+		}, 5);*/
+
+		
+
+
+
 	}
+
+
+	s.draw=function(){	
+		//console.log(canvas_width, canvas_height, s1.mouseX, s1.mouseY);
+
+		s.push(); //3lshan trag3 alcamera 3nd 0,0 laan translate bt accumelate
+
+		s.translate(canvas_width / 2, canvas_height / 2);
+		//s.scale(1.2);
+		s.translate(-player.position.x, -player.position.y);
+
+		s.background(200);
+
+		
+		//player.overlap(food_sprites,player_coll);
+       // player.overlap(mine_sprites,player_coll_mine);
+
+		s.fill(0);
+		s.ellipse(0,0,20,20);
+		s.ellipse(500,500,20,20);
+		drawLeaderBoard(s);  // to update score and my power
+
+      
+
+if(every_50)
+{
+	every_50=false;
+	       	
+			 socket.emit('input_fired', {
+				
+				pointer_worldx: s1.mouseX+player.position.x-canvas_width / 2, 
+				pointer_worldy: s1.mouseY+player.position.y-canvas_height / 2, 
+				//player_positionx:player.position.x,
+				//player_positiony:player.position.y,
+			 });
+
+			 //old_mousex=s1.mouseX+player.position.x-canvas_width / 2;
+			 //old_mousey= s1.mouseY+player.position.y-canvas_height / 2;
+
+		}
+
+
+      // i think here is the right place but don't work
+	  s1.drawSprites();
+	  //console.log(player.position.x, player.position.y, s1.mouseX, s1.mouseY);
+	   s.pop();
+	 
+	}
+	
+
+
 }
 
-var gameBootstrapper = {
-    init: function(gameContainerElementId){
-		game.state.add('main', main);
-		game.state.start('main'); 
-    }
-};;
 
-gameBootstrapper.init("gameDiv");
