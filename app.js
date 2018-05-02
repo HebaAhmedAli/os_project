@@ -435,7 +435,7 @@ function onInputFired (data) {
 
 	//collision_map.get((Math.ceil(movePlayer.x),Math.ceil(movePlayer.y)))[0]
 	
-	console.log("player position actual "+data.player_positionx+" "+data.player_positiony);
+	//console.log("player position actual "+data.player_positionx+" "+data.player_positiony);
 
 	move_player(movePlayer,serverPointer,this_client);
 
@@ -459,30 +459,24 @@ function move_player(movePlayer,serverPointer,this_client)
      console.log("old position "+point1.x+" "+point1.y);
      console.log("mouse "+serverPointer.worldX+" "+serverPointer.worldY);
       console.log("new position "+point2.x+" "+point2.y);
-//if gradient=infinity or - infinity x sabta wnzwd aw nall al y
-//if gradient=0 or - 0 y sabta wnzwd aw nall al x    yIntercept
+    //if gradient=infinity or - infinity x sabta wnzwd aw nall al y
+    //if gradient=0 or - 0 y sabta wnzwd aw nall al x    yIntercept
     
      //var stepx=(point2.x-point1.x)/30;
      //var stepy=(point2.y-point1.y)/30;
-     
-
-     /*var stepx=-0.001,stepy=-0.001;
-     if(point2.x-point1.x>0)
-     	stepx=0.001;
-     if(point2.y-point1.y>0)
-     	stepy=0.001;*/
-
-     //console.log("step "+stepx+" "+stepy);
-    
+   
      if(result.gradient==Infinity)
     {
+      console.log("if 1");
       while(movePlayer.y<newy)
       {
-      	check_collision_while_moving(movePlayer);
+      	check_collision_while_moving(movePlayer,this_client);
       	movePlayer.y+=stepy;
+      	console.log("movePlayer.y "+movePlayer.y);
         if(movePlayer.y<0)
         {
         		movePlayer.y=0;
+
         		break;
         }
         else if(movePlayer.y>scene_h-player_dim-1)
@@ -494,10 +488,12 @@ function move_player(movePlayer,serverPointer,this_client)
     }
     else if(result.gradient==-Infinity)
     {
+    	console.log("if 2");
       while(movePlayer.y>newy)
       {
-      	check_collision_while_moving(movePlayer);
-      	movePlayer.y+=stepy;
+      	check_collision_while_moving(movePlayer,this_client);
+      	movePlayer.y-=stepy;
+      	console.log("movePlayer.y "+movePlayer.y);
       	if(movePlayer.y<0)
         {
         		movePlayer.y=0;
@@ -512,9 +508,10 @@ function move_player(movePlayer,serverPointer,this_client)
     }
     else if(result.gradient==0)
     {
+    	console.log("if 3");
     	while(movePlayer.x<newx)
       {
-      	check_collision_while_moving(movePlayer);
+      	check_collision_while_moving(movePlayer,this_client);
       	movePlayer.x+=stepx;
       	if(movePlayer.x<0)
         {
@@ -530,10 +527,11 @@ function move_player(movePlayer,serverPointer,this_client)
     }
     else if(result.gradient==-0)
     {
+    	console.log("if 4");
       while(movePlayer.x>newx)
       {
-      	check_collision_while_moving(movePlayer);
-      	movePlayer.x+=stepx;
+      	check_collision_while_moving(movePlayer,this_client);
+      	movePlayer.x-=stepx;
       	if(movePlayer.x<0)
         {
         		movePlayer.x=0;
@@ -551,10 +549,13 @@ function move_player(movePlayer,serverPointer,this_client)
 
      if(movePlayer.x<newx)
      {
+     	console.log("if 5");
+     	
      while(movePlayer.x<newx)
 	 {
 
 	 movePlayer.y=result.gradient*movePlayer.x+result.yIntercept;
+	 console.log("movePlayer.y "+movePlayer.y);
 	  if(movePlayer.y<0)
         {
         		movePlayer.y=0;
@@ -565,7 +566,7 @@ function move_player(movePlayer,serverPointer,this_client)
         	movePlayer.y=scene_h-player_dim-1;
         		break;
         }
-     check_collision_while_moving(movePlayer);
+     check_collision_while_moving(movePlayer,this_client);
      movePlayer.x+=stepx;
      if(movePlayer.x<0)
         {
@@ -582,10 +583,14 @@ function move_player(movePlayer,serverPointer,this_client)
      }
      else
      {
+     	console.log("if 6");
      while(movePlayer.x>newx)
 	 {
 
+	 console.log("result ",result.gradient,result.yIntercept);
+
 	 movePlayer.y=result.gradient*movePlayer.x+result.yIntercept;
+	 console.log("movePlayer.y "+movePlayer.y);
 	 if(movePlayer.y<0)
         {
         		movePlayer.y=0;
@@ -596,8 +601,8 @@ function move_player(movePlayer,serverPointer,this_client)
         	movePlayer.y=scene_h-player_dim-1;
         		break;
         }
-     check_collision_while_moving(movePlayer);
-     movePlayer.x+=stepx;
+     check_collision_while_moving(movePlayer,this_client);
+     movePlayer.x-=stepx;
      if(movePlayer.x<0)
         {
         		movePlayer.x=0;
@@ -630,27 +635,26 @@ function check_collision_while_moving(movePlayer,this_client)
 	 if(collide_coin!=-1)
     {
      //coin
-       setTimeout(function() {
+     
 		console.log("coin collide");
      
         free_part_of_map(1,collide_coin);
 
         onitemPicked(collide_coin,movePlayer);
    
-		}, 40);
-     
+	
      
     }
     if(collide_mine!=-1)
     {
-     setTimeout(function() {
+     
 		console.log("mine collide");
     
  	    free_part_of_map(2,collide_mine);
    	    //mine
   	   onminePicked(collide_mine,movePlayer,this_client);
    
-		}, 40);
+		
      
     }
 }
@@ -663,7 +667,7 @@ function is_collide(center_x,center_y,type)
 
 for(var i=0;i<arr_x.length;i++)
 {
-	console.log(center_x+arr_x[i],center_y+arr_y[i]);
+	//console.log(center_x+arr_x[i],center_y+arr_y[i]);
 	if(collision_map[center_x+arr_x[i]][center_y+arr_y[i]][0]==type)
 	{
 	 
